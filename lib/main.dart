@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:modal_progress_hud/modal_progress_hud.dart';
+import './profile.dart';
 
 void main() => runApp(MyApp());
 
@@ -11,27 +13,41 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  String username;
-  final String url = 'https://api.github.com/';
-  static String clientId = '3160700241ac0063953b';
-  static String clientSecret = '1190e1049d0265ac52bd7201e23a9304ab39e896';
-  final String query = "?client_id=$clientId&client_secret=$clientSecret";
-  var userProfile;
-  var userRepos;
-
-  void getUser() async {
-    var profile = await http.get(url + 'users/' + username + query);
-    userProfile = jsonDecode(profile.body);
-    print(userProfile);
-  }
+  bool isLoading = false;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        backgroundColor: Color(0xFF1D2226),
-        body: Center(
+      home: Home(),
+      //initialRoute: '/profile',
+      routes: {'/profile': (context) => Profile()},
+    );
+  }
+}
+
+class Home extends StatefulWidget {
+  @override
+  _HomeState createState() => _HomeState();
+}
+
+class _HomeState extends State<Home> {
+  String username;
+  bool isLoading = false;
+
+  final String url = 'https://api.github.com/';
+  static String clientId = '3160700241ac0063953b';
+  static String clientSecret = '1190e1049d0265ac52bd7201e23a9304ab39e896';
+  final String query = "?client_id=$clientId&client_secret=$clientSecret";
+  var userProfile;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Color(0xFF1D2226),
+      body: ModalProgressHUD(
+        inAsyncCall: isLoading,
+        child: Center(
           child: Container(
             padding: EdgeInsets.fromLTRB(22.0, 30.0, 22.0, 0),
             child: Column(
@@ -81,10 +97,26 @@ class _MyAppState extends State<MyApp> {
                   child: MaterialButton(
                     textColor: Colors.white.withOpacity(0.8),
                     color: Color(0xFF0070F3),
-                    onPressed: () {
-                      //todo
-                      print(username);
-                      getUser();
+                    onPressed: () async {
+                      setState(() {
+                        isLoading = true;
+                      });
+                      var profile =
+                          await http.get(url + 'users/' + username + query);
+
+                      userProfile = jsonDecode(profile.body);
+
+                      if (userProfile != null) {
+                        //print(userProfile);
+                        setState(() {
+                          isLoading = false;
+                        });
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    Profile(profile: userProfile)));
+                      }
                     },
                     child: Text("GET PROFILE"),
                   ),
