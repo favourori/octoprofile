@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
 class Profile extends StatelessWidget {
-  final profile;
+  final  profile;
 
   Profile({this.profile});
+
   @override
   Widget build(BuildContext context) {
     print(profile);
